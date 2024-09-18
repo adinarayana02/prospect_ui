@@ -18,42 +18,74 @@ def connect_db():
             password=os.getenv('DB_PASSWORD'),
             sslmode='require'  # Use SSL if required by your database provider
         )
-# Rest of the code remains unchanged
+        return conn
+    except Exception as e:
+        st.error(f"Error connecting to the database: {e}")
+        return None
+
+# Insert user data into the "users" table
+def insert_user(company_name, requirements, date, status, notes, next_steps, contact_person, contact_information):
+    conn = connect_db()
+    if conn:
+        try:
+            cur = conn.cursor()
+            query = """
+            INSERT INTO users 
+            (company_name, requirements, date, status, notes, next_steps, contact_person, contact_information)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            cur.execute(query, (company_name, requirements, date, status, notes, next_steps, contact_person, contact_information))
+            conn.commit()
+            cur.close()
+            st.success("User added successfully!")
+        except Exception as e:
+            st.error(f"Error inserting user: {e}")
+        finally:
+            conn.close()
+
 # Search for company names based on query
 def search_users(query):
     conn = connect_db()
-    cur = conn.cursor()
-
-    search_query = """
-    SELECT company_name
-    FROM users
-    WHERE company_name ILIKE %s
-    """
-    
-    cur.execute(search_query, (f"%{query}%",))
-    results = cur.fetchall()
-    cur.close()
-    conn.close()
-    
-    return [row[0] for row in results]
+    if conn:
+        try:
+            cur = conn.cursor()
+            search_query = """
+            SELECT company_name
+            FROM users
+            WHERE company_name ILIKE %s
+            """
+            cur.execute(search_query, (f"%{query}%",))
+            results = cur.fetchall()
+            cur.close()
+            return [row[0] for row in results]
+        except Exception as e:
+            st.error(f"Error searching users: {e}")
+            return []
+        finally:
+            conn.close()
+    return []
 
 # Get detailed information for a selected company
 def get_company_details(company_name):
     conn = connect_db()
-    cur = conn.cursor()
-
-    details_query = """
-    SELECT company_name, requirements, date, status, notes, next_steps, contact_person, contact_information
-    FROM users
-    WHERE company_name = %s
-    """
-    
-    cur.execute(details_query, (company_name,))
-    details = cur.fetchone()
-    cur.close()
-    conn.close()
-    
-    return details
+    if conn:
+        try:
+            cur = conn.cursor()
+            details_query = """
+            SELECT company_name, requirements, date, status, notes, next_steps, contact_person, contact_information
+            FROM users
+            WHERE company_name = %s
+            """
+            cur.execute(details_query, (company_name,))
+            details = cur.fetchone()
+            cur.close()
+            return details
+        except Exception as e:
+            st.error(f"Error retrieving company details: {e}")
+            return None
+        finally:
+            conn.close()
+    return None
 
 # Streamlit UI
 st.title("User Management")
