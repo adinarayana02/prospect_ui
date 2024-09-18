@@ -9,14 +9,15 @@ load_dotenv()
 
 # Connect to PostgreSQL database
 def connect_db():
-    return psycopg2.connect(
-        host=os.getenv('DB_HOST'),
-        port=os.getenv('DB_PORT'),
-        database=os.getenv('DB_NAME'),
-        user=os.getenv('DB_USER'),
-        password=os.getenv('DB_PASSWORD')
-    )
-
+    try:
+        conn = psycopg2.connect(
+            host=os.getenv('DB_HOST'),
+            port=os.getenv('DB_PORT'),
+            database=os.getenv('DB_NAME'),
+            user=os.getenv('DB_USER'),
+            password=os.getenv('DB_PASSWORD'),
+            sslmode='require'  # Use SSL if required by your database provider
+        )
 # Rest of the code remains unchanged
 # Search for company names based on query
 def search_users(query):
